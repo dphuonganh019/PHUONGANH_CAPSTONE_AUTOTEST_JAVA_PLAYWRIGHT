@@ -1,0 +1,49 @@
+package utils;
+
+import java.io.InputStream;
+import java.util.Properties;
+
+public class ConfigReader {
+    private static final Properties PROPERTIES = loadProperties();
+
+    public static Properties loadProperties() {
+        Properties properties = new Properties();
+
+        try {
+            InputStream inputStream =
+                    ConfigReader.class.getClassLoader().getResourceAsStream("config.properties");
+            if (inputStream == null) {
+                throw new RuntimeException("File not found");
+            }
+            properties.load(inputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Error reading properties file", e);
+        }
+
+        return properties;
+    }
+
+    // define function get value from config.properties
+    public static String get(String key) {
+        // uu tien gia tri truyen qua -D (vd: mvn test -Dheadless=true) de CI co the override file config
+        String systemValue = System.getProperty(key);
+        if (systemValue != null && !systemValue.isEmpty()) {
+            return systemValue.trim();
+        }
+
+        String value = PROPERTIES.getProperty(key);
+
+        if (value == null) {
+            throw new RuntimeException("Key not found: " + key);
+        }
+        return value.trim();
+    }
+
+    public static int getInt(String key) {
+        return Integer.parseInt(get(key));
+    }
+
+    public static boolean getBoolean(String key) {
+        return Boolean.parseBoolean(get(key));
+    }
+}
